@@ -1,0 +1,19 @@
+.myst-reader-view {
+  overflow-y: auto;
+  padding: var(--size-4-4);
+}
+
+.myst-reader-content {
+  overflow-wrap: anywhere;
+  line-height: var(--line-height-normal);
+}
+
+.myst-reader-content > :first-child { margin-block-start: 0; }
+.myst-reader-content p,
+.myst-reader-content .callout-title-inner { unicode-bidi: plaintext; }
+
+.myst-reader-content pre,
+.myst-reader-content .math-block,
+.myst-reader-content .math { direction: ltr; unicode-bidi: isolate; }
+
+.myst-reader-content img { max-width: 100%; height: auto; }
