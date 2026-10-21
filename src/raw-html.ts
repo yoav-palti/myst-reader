@@ -77,12 +77,20 @@ export async function renderRawHTML(
     try {
       const html = file ? await app.vault.read(file) : block.body;
       if (!alive || current !== revision) return;
+      // Book fragments often use the MathJax runtime supplied by Jupyter Book.
+      // The sandbox cannot inherit Obsidian's runtime. Load a pinned SVG build
+      // before the fragment's scripts; SVG avoids separate font downloads.
+      const needsMath = /\bMathJax\b|\\\(|\\\[/.test(html);
+      const hasMathLoader = /<script\b[^>]*\bsrc\s*=\s*["'][^"']*mathjax/i.test(html);
+      const math = needsMath && !hasMathLoader
+        ? '<script src="https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-svg-full.js" referrerpolicy="no-referrer"></script>' : '';
       // srcdoc preserves inline scripts and external HTTPS libraries, while the
       // opaque sandbox origin keeps them separate from the application.
       frame.srcdoc = '<!doctype html><html><head><meta charset="utf-8">'
         + '<meta name="viewport" content="width=device-width, initial-scale=1">'
         + '<style>html{background:transparent}body{margin:0;padding:8px;box-sizing:border-box;font-family:system-ui,sans-serif}</style>'
-        + '</head><body>' + html + measure + '</body></html>';
+        + math + '</head><body>' + html + measure + '</body></html>';
+      if (frame.parentElement !== target) target.replaceChildren(frame);
       changed();
     } catch (error) {
       if (!alive || current !== revision) return;

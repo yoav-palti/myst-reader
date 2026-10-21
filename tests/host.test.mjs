@@ -247,3 +247,19 @@ test('Live Preview uses the same raw HTML sandbox as Reading view', async () => 
   cursor.value.spec.widget.destroy(wrapper);
   assert.equal(wrapper.querySelector('iframe'), null);
 });
+
+test('book fragments receive MathJax before their scripts, without duplicate loaders', async () => {
+  for (const html of ['<p>\\(x^2\\)</p>', '<script>window.MathJax.startup.promise</script>']) {
+    const host = rawHost();
+    const { root } = host.codeBlock('{raw}', html);
+    await host.postprocessors[0](root, host.context);
+    const source = root.querySelector('iframe').srcdoc;
+    assert.match(source, /mathjax@3\.2\.2\/es5\/tex-svg-full\.js/);
+    assert.ok(source.indexOf('mathjax@3.2.2') < source.indexOf(html));
+  }
+  const host = rawHost();
+  const html = '<script src="https://example.com/mathjax.js"></script><p>\\(x\\)</p>';
+  const { root } = host.codeBlock('{raw}', html);
+  await host.postprocessors[0](root, host.context);
+  assert.doesNotMatch(root.querySelector('iframe').srcdoc, /mathjax@3\.2\.2/);
+});

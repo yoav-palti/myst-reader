@@ -84,7 +84,7 @@ Reading view can recover custom titles when Obsidian supplies source section inf
 
 The example reads `interactives/frequency-response.html` relative to the note's folder. The file must be inside the vault and end in `.html` or `.htm`. Changes to the HTML file reload its frame automatically. Missing or invalid files show an explanatory message.
 
-HTML can contain inline JavaScript and load libraries from absolute HTTPS URLs. Internet access is needed for remote resources; self-contained HTML can work offline. Relative companion assets are not resolved from the HTML file, so use self-contained content or absolute HTTPS URLs. The frame resizes to its content and retains scrolling for very long documents. Raw HTML formats other than `html` stay readable as source.
+HTML can contain inline JavaScript and load libraries from absolute HTTPS URLs. Fragments that reference `MathJax` or contain LaTeX delimiters automatically receive MathJax 3.2.2 from jsDelivr, unless they already include a MathJax script loader. This supplies the runtime normally provided by Jupyter Book. Internet access is needed for remote resources, including this math runtime; self-contained HTML can work offline. Relative companion assets are not resolved from the HTML file, so use self-contained content or absolute HTTPS URLs. The frame resizes to its content and retains scrolling for very long documents. Raw HTML formats other than `html` stay readable as source.
 
 ## Privacy
 

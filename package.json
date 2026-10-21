@@ -1,6 +1,6 @@
 {
   "name": "myst-reader",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "private": true,
   "type": "module",
   "description": "Render MyST Markdown directives in Obsidian without changing the source.",
