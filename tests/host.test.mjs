@@ -18,6 +18,8 @@ function createHost() {
   const rendered = [];
   const children = [];
   const editorExtensions = [];
+  const extraInterfaces = [];
+  const layoutCallbacks = [];
   const liveField = cmState.StateField.define({ create: () => true, update: value => value });
   const infoField = cmState.StateField.define({ create: () => ({ file: { path: 'note.md' } }), update: value => value });
   let failRender = false;
@@ -26,10 +28,13 @@ function createHost() {
     unload() {}
   }
   class Plugin extends Component {
-    app = {};
-    registerView() {}
-    addCommand() {}
-    addRibbonIcon() {}
+    app = { workspace: {
+      onLayoutReady: callback => layoutCallbacks.push(callback),
+      getLeavesOfType: () => [],
+    } };
+    registerView() { extraInterfaces.push('view'); }
+    addCommand() { extraInterfaces.push('command'); }
+    addRibbonIcon() { extraInterfaces.push('ribbon'); }
     registerEditorExtension(extension) { editorExtensions.push(extension); }
     registerMarkdownPostProcessor(fn) { postprocessors.push(fn); }
     registerMarkdownCodeBlockProcessor(language, handler) { codeprocessors.push({ language, handler }); }
@@ -81,6 +86,7 @@ function createHost() {
   }
   return {
     document, api, context, postprocessors, rendered, codeBlock, editorExtensions, liveField, infoField,
+    extraInterfaces, layoutCallbacks, plugin,
     failRendering: () => { failRender = true; },
   };
 }
@@ -89,6 +95,23 @@ test('registering the plugin does not break ordinary Markdown rendering', async 
   const host = createHost();
   await assert.doesNotReject(host.api.MarkdownRenderer.render({}, 'Plain note', host.document.createElement('div')));
   assert.equal(host.postprocessors.length, 1);
+});
+
+test('opening ordinary notes is sufficient, without a separate pane or command', () => {
+  const host = createHost();
+  assert.equal(host.extraInterfaces.length, 0);
+  assert.equal(host.editorExtensions.length, 1);
+  assert.equal(host.postprocessors.length, 1);
+});
+
+test('upgrading closes a duplicate legacy pane without changing the existing note', () => {
+  const host = createHost();
+  let detached = false;
+  const normal = { getViewState: () => ({ state: { file: 'note.md' } }) };
+  const legacy = { ...normal, detach: () => { detached = true; } };
+  host.plugin.app.workspace.getLeavesOfType = type => type === 'markdown' ? [normal] : [legacy];
+  host.layoutCallbacks[0]();
+  assert.equal(detached, true);
 });
 
 test('Live Preview renders inactive directives and exposes source when the cursor enters', () => {

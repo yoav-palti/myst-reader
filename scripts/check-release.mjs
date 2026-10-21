@@ -16,7 +16,7 @@ const compareVersions = (left, right) => {
   for (let i = 0; i < 3; i++) if (a[i] !== b[i]) return a[i] - b[i];
   return 0;
 };
-// Workspace.revealLeaf's public API is available starting in 1.7.2.
+// Keep the established compatibility floor for the editor integration.
 assert.ok(compareVersions(manifest.minAppVersion, '1.7.2') >= 0);
 assert.ok(manifest.author && manifest.description.endsWith('.') && manifest.description.length <= 250);
 assert.equal(manifest.isDesktopOnly, false);

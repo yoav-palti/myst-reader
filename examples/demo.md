@@ -7,7 +7,7 @@ $$T\{x(t)\}=x(t)\ast h(t)$$
 $$x(t)\ast h(t)=\int_{-\infty}^{\infty}x(\tau)h(t-\tau)\,d\tau$$
 ```
 
-The following examples use the **MyST preview** pane.
+The following colon-fenced examples render automatically in **Live Preview**.
 
 ::::{note} Nested directives
 
