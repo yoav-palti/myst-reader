@@ -14,10 +14,13 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run check
+      - run: npm run package
+      - name: Create install ZIP
+        working-directory: dist
+        run: zip -r "myst-reader-${GITHUB_REF_NAME}.zip" myst-reader
       - name: Validate version tag
         run: node -e "const m=require('./manifest.json'); if(process.env.GITHUB_REF_NAME!==m.version) process.exit(1)"
       - name: Publish release assets
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css --title "MyST Reader $GITHUB_REF_NAME" --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" main.js manifest.json styles.css "dist/myst-reader-${GITHUB_REF_NAME}.zip" --title "MyST Reader $GITHUB_REF_NAME" --generate-notes

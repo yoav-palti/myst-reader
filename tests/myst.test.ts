@@ -104,8 +104,21 @@ test('labels are constrained and do not convert inline examples', () => {
 });
 
 test('frontmatter is preserved', () => {
-  const source = '---\ntitle: Test\n---\n\nHello';
+  const source = '---\ntitle: "{math}`literal`"\n---\n\nHello';
   assert.equal(transformMyST(source), source);
+});
+
+test('following prose does not become a callout continuation', () => {
+  assert.equal(transformMyST(':::{note}\nInside\n:::\nOutside'), '> [!note] Note\n> Inside\n\nOutside');
+});
+
+test('indented code does not transform roles', () => {
+  assert.equal(transformMyST('    {math}`literal`'), '    {math}`literal`');
+});
+
+test('deeply nested input is bounded and stays readable', () => {
+  const source = Array.from({ length: 40 }, (_, i) => ':'.repeat(44 - i) + '{note}').join('\n') + '\nHello\n' + Array.from({ length: 40 }, (_, i) => ':'.repeat(i + 5)).join('\n');
+  assert.ok(transformMyST(source).includes('Hello'));
 });
 
 test('nested ordinary code in admonitions stays literal', () => {
