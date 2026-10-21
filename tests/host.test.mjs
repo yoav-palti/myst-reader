@@ -24,8 +24,12 @@ function createHost() {
   const infoField = cmState.StateField.define({ create: () => ({ file: { path: 'note.md' } }), update: value => value });
   let failRender = false;
   class Component {
+    cleanups = [];
+    register(fn) { this.cleanups.push(fn); }
+    registerEvent(event) { this.register(() => event.off()); }
     addChild(child) { return child; }
-    unload() {}
+    removeChild(child) { child.unload(); }
+    unload() { this.cleanups.splice(0).forEach(fn => fn()); }
   }
   class Plugin extends Component {
     app = { workspace: {
@@ -86,7 +90,7 @@ function createHost() {
   }
   return {
     document, api, context, postprocessors, rendered, codeBlock, editorExtensions, liveField, infoField,
-    extraInterfaces, layoutCallbacks, plugin,
+    extraInterfaces, layoutCallbacks, plugin, children,
     failRendering: () => { failRender = true; },
   };
 }
@@ -172,4 +176,74 @@ test('a rendering failure keeps the original code readable', async () => {
   assert.equal(root.querySelector('.myst-reader-content'), null);
   assert.equal(pre.textContent, 'Original source');
   assert.equal(pre.dataset.mystReader, undefined);
+});
+
+function rawHost(argument = 'html', requested = 'interactives/frequency-response.html') {
+  const host = createHost();
+  const path = 'LTI/' + requested;
+  const file = new host.api.TFile();
+  file.path = path;
+  let listener;
+  let html = '<section id="graph">Graph</section><script>window.graphLoaded=true</script>';
+  host.plugin.app.vault = {
+    getAbstractFileByPath: value => value === path ? file : null,
+    read: async () => html,
+    on: (event, callback) => { listener = callback; return { off: () => { listener = undefined; } }; },
+  };
+  host.context.getSectionInfo = () => ({ text: '```{raw} ' + argument + '\n:file: ' + requested + '\n```', lineStart: 0, lineEnd: 2 });
+  return { ...host, file, modify: async value => { html = value; listener?.(file); await new Promise(resolve => setTimeout(resolve, 0)); }, hasListener: () => !!listener };
+}
+
+test('raw HTML reads the note-relative file in a script-only sandbox and cleans up', async () => {
+  const host = rawHost();
+  const { root } = host.codeBlock('{raw}', ':file: interactives/frequency-response.html');
+  await host.postprocessors[0](root, host.context);
+  const frame = root.querySelector('iframe');
+  assert.ok(frame);
+  assert.equal(frame.getAttribute('sandbox'), 'allow-scripts');
+  assert.match(frame.srcdoc, /window.graphLoaded=true/);
+  assert.equal(root.querySelector('script'), null);
+  assert.equal(root.querySelector('pre'), null);
+  assert.equal(host.hasListener(), true);
+  await host.modify('<p>Updated graph</p>');
+  assert.match(frame.srcdoc, /Updated graph/);
+  host.children[0].unload();
+  assert.equal(host.hasListener(), false);
+  assert.equal(root.querySelector('iframe'), null);
+});
+
+test('unsafe, missing, and non-HTML file includes give readable errors', async () => {
+  for (const path of ['../../secret.html', 'https://example.com/x.html', 'C:\\secret.html', '/secret.html', 'note.md', 'missing.html']) {
+    const host = rawHost();
+    const { root } = host.codeBlock('{raw}', ':file: ' + path);
+    await host.postprocessors[0](root, host.context);
+    assert.equal(root.querySelector('iframe'), null, path);
+    assert.match(root.textContent, /MyST Reader:/, path);
+  }
+});
+
+test('inline raw HTML works, while other raw formats remain source', async () => {
+  const host = rawHost();
+  const { root } = host.codeBlock('{raw}', '<button>Interactive</button>');
+  await host.postprocessors[0](root, host.context);
+  assert.match(root.querySelector('iframe').srcdoc, /<button>Interactive<\/button>/);
+  const other = rawHost('latex');
+  const code = other.codeBlock('{raw}', 'literal LaTeX');
+  await other.postprocessors[0](code.root, other.context);
+  assert.equal(code.root.querySelector('iframe'), null);
+  assert.match(other.rendered[0], /literal LaTeX/);
+});
+
+test('Live Preview uses the same raw HTML sandbox as Reading view', async () => {
+  const host = rawHost();
+  const field = host.editorExtensions[0];
+  const doc = 'Before\n\n```{raw} html\n<button>Live graph</button>\n```\n\nAfter';
+  const state = cmState.EditorState.create({ doc, extensions: [host.liveField, host.infoField, field] });
+  const cursor = state.field(field).iter();
+  const wrapper = cursor.value.spec.widget.toDOM({ dom: host.document.body, requestMeasure() {} });
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.match(wrapper.querySelector('iframe').srcdoc, /Live graph/);
+  assert.equal(wrapper.querySelector('iframe').getAttribute('sandbox'), 'allow-scripts');
+  cursor.value.spec.widget.destroy(wrapper);
+  assert.equal(wrapper.querySelector('iframe'), null);
 });

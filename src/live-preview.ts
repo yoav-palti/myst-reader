@@ -1,21 +1,21 @@
 import { StateField, type EditorState } from '@codemirror/state';
 import { Decoration, EditorView, WidgetType, type DecorationSet } from '@codemirror/view';
-import { Component, editorInfoField, editorLivePreviewField, MarkdownRenderer, type Plugin } from 'obsidian';
-import { DIRECTIVES, parseDocument, renderDirective } from './myst';
+import { Component, editorInfoField, editorLivePreviewField, type Plugin } from 'obsidian';
+import { DIRECTIVES, parseDocument, type Directive } from './myst';
+import { renderMySTDirective } from './render';
 
 class DirectiveWidget extends WidgetType {
   private components = new WeakMap<HTMLElement, Component>();
 
   constructor(
     private owner: Plugin,
-    private markdown: string,
-    private raw: string,
+    private block: Directive,
     private path: string,
     private from: number,
   ) { super(); }
 
   eq(other: DirectiveWidget): boolean {
-    return this.markdown === other.markdown && this.path === other.path && this.from === other.from;
+    return this.block.raw === other.block.raw && this.path === other.path && this.from === other.from;
   }
 
   toDOM(view: EditorView): HTMLElement {
@@ -36,13 +36,14 @@ class DirectiveWidget extends WidgetType {
     wrapper.append(edit, content);
     const component = this.owner.addChild(new Component());
     this.components.set(wrapper, component);
-    void MarkdownRenderer.render(this.owner.app, this.markdown, content, this.path, component)
+    void renderMySTDirective(this.owner.app, this.block, content, this.path, component,
+      () => { if (this.components.has(wrapper)) view.requestMeasure(); })
       .then(() => { if (this.components.has(wrapper)) view.requestMeasure(); })
       .catch(error => {
         if (!this.components.has(wrapper)) return;
         content.replaceChildren();
         const pre = doc.createElement('pre');
-        pre.textContent = this.raw;
+        pre.textContent = this.block.raw;
         content.append(pre);
         console.error('MyST Reader: Live Preview rendering failed', error);
         view.requestMeasure();
@@ -70,7 +71,7 @@ function decorations(state: EditorState, owner: Plugin): DecorationSet {
       const editing = state.selection.ranges.some(range => range.from <= end && range.to >= offset);
       if (!editing) ranges.push(Decoration.replace({
         block: true,
-        widget: new DirectiveWidget(owner, renderDirective(block), block.raw, path, offset),
+        widget: new DirectiveWidget(owner, block, path, offset),
       }).range(offset, end));
     }
     offset = end + 1;

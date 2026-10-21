@@ -19,7 +19,7 @@ const admonitions: Record<string, string> = {
 
 export const DIRECTIVES = [
   ...Object.keys(admonitions), 'dropdown', 'math', 'image', 'figure', 'code-block',
-  'code', 'code-cell', 'list-table', 'table', 'rubric', 'epigraph', 'pull-quote',
+  'code', 'code-cell', 'list-table', 'table', 'rubric', 'epigraph', 'pull-quote', 'raw',
 ];
 
 const opening = /^ {0,3}(`{3,}|:{3,})\{([a-zA-Z][\w-]*)\}(?:[ \t]+(.*))?[ \t]*$/;

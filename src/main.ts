@@ -1,9 +1,10 @@
 import {
-  MarkdownRenderer, MarkdownRenderChild, Plugin, TFile,
+  MarkdownRenderChild, Plugin, TFile,
   type MarkdownPostProcessorContext,
 } from 'obsidian';
-import { DIRECTIVES, parseContent, renderDirective, type Directive } from './myst';
+import { DIRECTIVES, parseContent, type Directive } from './myst';
 import { livePreviewExtension } from './live-preview';
+import { renderMySTDirective } from './render';
 
 /** The host passes the body, so recover a custom title from the source section. */
 function directiveFromProcessor(name: string, source: string, el: HTMLElement, ctx: MarkdownPostProcessorContext): Directive {
@@ -40,7 +41,7 @@ export default class MySTReader extends Plugin {
         const child = new MarkdownRenderChild(container);
         ctx.addChild(child);
         try {
-          await MarkdownRenderer.render(this.app, renderDirective(block), container, ctx.sourcePath, child);
+          await renderMySTDirective(this.app, block, container, ctx.sourcePath, child);
           pre.remove();
         } catch (error) {
           container.remove();

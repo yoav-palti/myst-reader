@@ -13,6 +13,9 @@
 
 .myst-reader-content img { max-width: 100%; height: auto; }
 
+.myst-reader-html { display: block; width: 100%; height: 720px; border: 0; }
+.myst-reader-html-error { color: var(--text-error); }
+
 .myst-reader-widget {
   position: relative;
   padding-block: var(--size-4-2);

@@ -60,6 +60,7 @@ Keep an eye on the units.
 - `code`, `code-block`, and `code-cell` display code. They **never execute code**.
 - Simple `list-table` directives, with zero or one header row and one-line cells; `table` wraps a Markdown table.
 - `rubric`, `epigraph`, and `pull-quote`.
+- Top-level `raw` HTML, either inline or loaded with `:file:` from a vault HTML file relative to the current note. Scripts and HTTPS libraries run in an isolated iframe in both Reading view and Live Preview.
 - Inline `{math}` / `{m}`, `{code}`, `{file}`, `{command}`, `{kbd}`, `{guilabel}`, `{ref}`, `{eq}`, `{numref}`, and `{doc}` roles. Explicit link text such as `` {ref}`See this <my-label>` `` is supported.
 - Standalone `(my-label)=` labels inside processed directives.
 
@@ -69,13 +70,25 @@ See [the demo note](examples/demo.md) for a complete example.
 
 This renderer supports a documented subset of MyST, not the complete MyST parser or a Jupyter/Sphinx runtime. Build your book with its normal toolchain for authoritative output.
 
-Unknown directives and roles remain unchanged. Includes, raw directives, notebook execution, bibliography resolution, Sphinx domains, tab sets, grids, YAML directive options, cross-document label indexing, automatic equation/figure numbering, and inline roles outside processed directives are not implemented. `ref`, `eq`, and `numref` create local anchor links and do not compute numbers. Image sizing and layout options are not implemented. Invalid or unclosed directives remain readable as source. Inline roles within indented code, fenced code, and frontmatter are preserved. More than 32 nested directive levels fall back to source.
+Unknown directives and roles remain unchanged. Includes, non-HTML raw directives, nested raw HTML, notebook execution, bibliography resolution, Sphinx domains, tab sets, grids, YAML directive options, cross-document label indexing, automatic equation/figure numbering, and inline roles outside processed directives are not implemented. `ref`, `eq`, and `numref` create local anchor links and do not compute numbers. Image sizing and layout options are not implemented. Invalid or unclosed directives remain readable as source. Inline roles within indented code, fenced code, and frontmatter are preserved. More than 32 nested directive levels fall back to source.
 
 Reading view can recover custom titles when Obsidian supplies source section information; otherwise it uses the directive's default title. Live Preview has the full source and custom titles.
 
+## Interactive HTML
+
+````markdown
+```{raw} html
+:file: interactives/frequency-response.html
+```
+````
+
+The example reads `interactives/frequency-response.html` relative to the note's folder. The file must be inside the vault and end in `.html` or `.htm`. Changes to the HTML file reload its frame automatically. Missing or invalid files show an explanatory message.
+
+HTML can contain inline JavaScript and load libraries from absolute HTTPS URLs. Internet access is needed for remote resources; self-contained HTML can work offline. Relative companion assets are not resolved from the HTML file, so use self-contained content or absolute HTTPS URLs. The frame resizes to its content and retains scrolling for very long documents. Raw HTML formats other than `html` stay readable as source.
+
 ## Privacy
 
-MyST Reader does not write to notes, execute code, access files outside the vault, make network requests, or collect telemetry. Rendering is delegated to Obsidian, including its ordinary handling of remote images and links embedded in your Markdown. Remote images can therefore load through Obsidian in the same way they do in ordinary notes. It renders the note content Obsidian provides.
+MyST Reader does not write to notes, read files outside the vault, or collect telemetry. It reads HTML files explicitly referenced by `raw` directives. Raw HTML scripts execute inside an iframe with `sandbox="allow-scripts"` and without `allow-same-origin`; they cannot access Obsidian's DOM, vault APIs, or application storage. Only embed HTML you trust: its scripts and external resources can contact third-party servers, which receive ordinary network information such as your IP address. The iframe sends no referrer. Other Markdown rendering is delegated to Obsidian, including its ordinary handling of remote images and links. Code cells and code blocks remain display-only.
 
 ## Development
 
