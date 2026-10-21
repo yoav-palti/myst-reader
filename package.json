@@ -1,6 +1,6 @@
 {
   "name": "myst-reader",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "type": "module",
   "description": "Render MyST Markdown directives in Obsidian without changing the source.",
@@ -8,13 +8,16 @@
   "scripts": {
     "build": "tsc --noEmit && node esbuild.config.mjs",
     "dev": "node esbuild.config.mjs --watch",
-    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "test": "node --experimental-strip-types --test tests/*.test.ts tests/*.test.mjs",
     "check": "npm run test && npm run build && node scripts/check-release.mjs",
     "package": "npm run check && node scripts/package.mjs"
   },
   "devDependencies": {
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.13",
     "@types/node": "^24.0.0",
     "esbuild": "^0.25.0",
+    "happy-dom": "^20.14.6",
     "obsidian": "^1.8.7",
     "typescript": "^5.8.0"
   }

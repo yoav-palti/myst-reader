@@ -11,19 +11,21 @@ Preview MyST Markdown in Obsidian while keeping your Jupyter Book and Sphinx sou
 
 The folder must be called `myst-reader`. The plugin supports desktop and mobile APIs; a physical mobile device has not yet been tested.
 
-## Two ways to preview
+## Three ways to preview
 
-| Feature | Reading view | MyST preview pane |
-| --- | --- | --- |
-| Backtick-fenced supported directives | Yes | Yes |
-| Colon-fenced supported directives | No | Yes |
-| Nested supported directives | Yes, inside a processed backtick directive | Yes |
-| Standard dollar-delimited math | Obsidian native | Obsidian native |
-| Supported inline roles | Inside processed directives | Throughout prose |
-| MyST label anchors and local reference links | Inside processed directives | Yes |
-| Source editing | Obsidian native | Read-only; follows the current note |
+| Feature | Reading view | Live Preview | MyST preview pane |
+| --- | --- | --- | --- |
+| Backtick-fenced supported directives | Yes | Yes | Yes |
+| Colon-fenced supported directives | No | Yes | Yes |
+| Nested supported directives | Inside a processed backtick directive | Yes | Yes |
+| Standard dollar-delimited math | Obsidian native | Obsidian native | Obsidian native |
+| Supported inline roles | Inside processed directives | Inside processed directives | Throughout prose |
+| MyST label anchors and local reference links | Inside processed directives | Inside processed directives | Yes |
+| Source editing | Obsidian native | Move the cursor into a block or click Edit | Read-only; follows the current note |
 
-The preview pane follows Markdown file switches and editor changes. Open it beside the editor to write and preview simultaneously. Standard Live Preview editing behavior depends on Obsidian's code block rendering; full-document MyST support is provided by the separate pane.
+In Live Preview, supported directives render as callouts, equations, or other preview blocks when the cursor is outside them. Move the cursor into a block or use its **Edit** button to expose the source. Source mode always shows the original Markdown.
+
+The separate preview pane follows Markdown file switches and editor changes. Open it beside the editor to write and preview simultaneously; it also handles supported inline roles throughout prose.
 
 ## Example
 
@@ -38,7 +40,7 @@ $$x(t)\ast h(t)=\int_{-\infty}^{\infty}x(\tau)h(t-\tau)\,d\tau$$
 
 The directive becomes a native tip callout containing rendered math. The source file is never rewritten.
 
-Colon fences work in the MyST preview pane:
+Colon fences work in Live Preview and the MyST preview pane:
 
 ```markdown
 ::::{note} An outer note

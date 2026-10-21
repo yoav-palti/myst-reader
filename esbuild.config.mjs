@@ -3,7 +3,7 @@ import * as esbuild from 'esbuild';
 const options = {
   entryPoints: ['src/main.ts'],
   bundle: true,
-  external: ['obsidian'],
+  external: ['obsidian', '@codemirror/state', '@codemirror/view'],
   format: 'cjs',
   target: 'es2020',
   outfile: 'main.js',

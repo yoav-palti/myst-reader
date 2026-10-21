@@ -3,6 +3,7 @@ import {
   type MarkdownPostProcessorContext, type ViewStateResult, type WorkspaceLeaf,
 } from 'obsidian';
 import { DIRECTIVES, parseContent, renderDirective, transformMyST, type Directive } from './myst';
+import { livePreviewExtension } from './live-preview';
 
 const VIEW_TYPE = 'myst-reader-preview';
 
@@ -72,9 +73,10 @@ class MySTView extends ItemView {
       this.rendered = component;
       this.contentEl.replaceChildren(container);
       this.contentEl.scrollTop = scroll;
-    } catch {
+    } catch (error) {
       this.removeChild(component);
-      if (revision === this.revision) new Notice('MyST Reader could not render this note. Your source is unchanged.');
+      console.error('MyST Reader: preview rendering failed', error);
+      if (revision === this.revision) new Notice(`MyST Reader: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 }
@@ -94,18 +96,38 @@ export default class MySTReader extends Plugin {
     this.registerView(VIEW_TYPE, leaf => new MySTView(leaf));
     this.addCommand({ id: 'open-preview', name: 'Open MyST preview', callback: () => { void this.openPreview(); } });
     this.addRibbonIcon('book-open', 'Open MyST preview', () => { void this.openPreview(); });
-    for (const name of DIRECTIVES) {
-      this.registerMarkdownCodeBlockProcessor(`{${name}}`, async (source, el, ctx) => {
-        const block = directiveFromProcessor(name, source, el, ctx);
-        const container = el.createDiv({ cls: 'myst-reader-content' });
+    this.registerEditorExtension(livePreviewExtension(this));
+    // Obsidian interpolates code-block language names into a CSS selector.
+    // Registering "{admonition}" there makes every Markdown render throw.
+    // Inspect class tokens through a generic postprocessor instead.
+    this.registerMarkdownPostProcessor(async (el, ctx) => {
+      const blocks = el.tagName === 'PRE' ? [el] : Array.from(el.querySelectorAll<HTMLElement>('pre'));
+      for (const pre of blocks) {
+        if (pre.dataset.mystReader) continue;
+        const code = pre.querySelector<HTMLElement>('code');
+        if (!code) continue;
+        const language = Array.from(code.classList).find(value => /^language-\{[\w-]+\}$/.test(value));
+        const name = language?.slice('language-{'.length, -1);
+        if (!name || !DIRECTIVES.includes(name)) continue;
+        pre.dataset.mystReader = 'rendering';
+        const block = directiveFromProcessor(name, code.textContent ?? '', pre, ctx);
+        const container = pre.ownerDocument.createElement('div');
+        container.className = 'myst-reader-content';
         container.setAttribute('dir', 'auto');
-        // ctx is the owner supplied by the host. Its children unload with the section.
-        // MarkdownRenderChild bridges Component lifetime to the postprocessor.
+        pre.after(container);
         const child = new MarkdownRenderChild(container);
         ctx.addChild(child);
-        await MarkdownRenderer.render(this.app, renderDirective(block), container, ctx.sourcePath, child);
-      });
-    }
+        try {
+          await MarkdownRenderer.render(this.app, renderDirective(block), container, ctx.sourcePath, child);
+          pre.remove();
+        } catch (error) {
+          container.remove();
+          child.unload();
+          delete pre.dataset.mystReader;
+          console.error('MyST Reader: directive rendering failed', error);
+        }
+      }
+    });
   }
 
   private async openPreview(): Promise<void> {
