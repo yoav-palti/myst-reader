@@ -1,8 +1,8 @@
 {
   "id": "myst-reader",
   "name": "MyST Reader",
-  "version": "1.0.0",
-  "minAppVersion": "1.5.0",
+  "version": "1.0.1",
+  "minAppVersion": "1.7.2",
   "description": "Preview MyST Markdown admonitions, math, figures, roles, and nested directives while preserving your source files.",
   "author": "yoav-palti",
   "authorUrl": "https://github.com/yoav-palti",

@@ -10,6 +10,14 @@ assert.ok(!manifest.id.includes('obsidian') && !manifest.id.endsWith('plugin'));
 assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
 assert.equal(manifest.version, pkg.version);
 assert.equal(versions[manifest.version], manifest.minAppVersion);
+const compareVersions = (left, right) => {
+  const a = left.split('.').map(Number);
+  const b = right.split('.').map(Number);
+  for (let i = 0; i < 3; i++) if (a[i] !== b[i]) return a[i] - b[i];
+  return 0;
+};
+// Workspace.revealLeaf's public API is available starting in 1.7.2.
+assert.ok(compareVersions(manifest.minAppVersion, '1.7.2') >= 0);
 assert.ok(manifest.author && manifest.description.endsWith('.') && manifest.description.length <= 250);
 assert.equal(manifest.isDesktopOnly, false);
 for (const file of ['main.js', 'styles.css', 'LICENSE', 'README.md']) assert.ok((await stat(file)).size > 0);

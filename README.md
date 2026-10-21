@@ -77,7 +77,7 @@ MyST Reader does not write to notes, execute code, access files outside the vaul
 
 ## Development
 
-Requires Node.js 22.18+ or 24+, npm, and Obsidian 1.5.0 or newer. The plugin uses public Obsidian APIs only; the development Node requirement does not apply to users installing the bundled plugin.
+Requires Node.js 22.18+ or 24+, npm, and Obsidian 1.7.2 or newer. The plugin uses public Obsidian APIs only; the development Node requirement does not apply to users installing the bundled plugin.
 
 ```sh
 npm ci
@@ -89,7 +89,7 @@ npm run package
 
 ## Release and community registration
 
-The repository must be public with `manifest.json`, `README.md`, and `LICENSE` at its root. Create a GitHub release tagged exactly `1.0.0` (no `v`) and attach `main.js`, `manifest.json`, and `styles.css`. The included release workflow does this for a pushed version tag after running checks.
+The repository must be public with `manifest.json`, `README.md`, and `LICENSE` at its root. Create a GitHub release tagged exactly as the manifest's version (no `v`) and attach `main.js`, `manifest.json`, and `styles.css`. The included release workflow does this for a pushed version tag after running checks.
 
 Submit through [Obsidian Community](https://community.obsidian.md) using an Obsidian account linked to the repository owner's GitHub account. Community availability depends on Obsidian's review. See the [official submission guide](https://docs.obsidian.md/Plugins/Releasing/Submit%20your%20plugin).
 
